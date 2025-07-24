@@ -75,7 +75,7 @@
               ]
             );
         editableOverlay = ws.workspace.mkEditablePyprojectOverlay {
-          root = dir;
+          root = "$REPO_ROOT";
         };
         editablePythonSet = pythonSet.overrideScope (
           lib.composeManyExtensions [
