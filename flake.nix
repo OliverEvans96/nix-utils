@@ -28,12 +28,12 @@
       inherit (nixpkgs) lib;
 
       # Helper to load workspace and overlays
-      mkWorkspace = dir: let
+      mkWorkspace = { dir, overrides ? (_final: _prev: { }) }: let
         workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = dir; };
         overlay = workspace.mkPyprojectOverlay {
           sourcePreference = "wheel";
         };
-        pyprojectOverrides = _final: _prev: { };
+        pyprojectOverrides = overrides;
       in {
         inherit workspace overlay pyprojectOverrides;
       };
@@ -43,8 +43,8 @@
       python = pkgs.python312;
 
       # Non-editable environment
-      mkUvEnv = dir: venvName: let
-        ws = mkWorkspace dir;
+      mkUvEnv = { dir, venvName, workspaceOverrides ? (_final: _prev: { }) }: let
+        ws = mkWorkspace { inherit dir; overrides = workspaceOverrides; };
         pythonSet =
           (pkgs.callPackage pyproject-nix.build.packages {
             inherit python;
@@ -61,18 +61,20 @@
         virtualenv;
 
       # Editable (dev) environment
-      mkUvDevShell = dir: venvName: let
-        ws = mkWorkspace dir;
+      mkUvDevShell = { dir, venvName, workspaceOverrides ? (_final: _prev: { }), overlays ? [], extraPackages ? [] }: let
+        ws = mkWorkspace { inherit dir; overrides = workspaceOverrides; };
         pythonSet =
           (pkgs.callPackage pyproject-nix.build.packages {
             inherit python;
           }).overrideScope
             (
-              lib.composeManyExtensions [
-                pyproject-build-systems.overlays.default
-                ws.overlay
-                ws.pyprojectOverrides
-              ]
+              lib.composeManyExtensions (
+                [
+                  pyproject-build-systems.overlays.default
+                  ws.overlay
+                  ws.pyprojectOverrides
+                ] ++ overlays
+              )
             );
         editableOverlay = ws.workspace.mkEditablePyprojectOverlay {
           root = "$REPO_ROOT";
