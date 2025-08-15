@@ -84,7 +84,7 @@
             editableOverlay
           ]
         );
-        virtualenv = editablePythonSet.mkVirtualEnv venvName ws.workspace.deps.all { inherit ignoreCollisions; };
+        virtualenv = editablePythonSet.mkVirtualEnv venvName (ws.workspace.deps.all // { inherit ignoreCollisions; });
       in
         pkgs.mkShell {
           packages = [
