@@ -61,7 +61,7 @@
         virtualenv;
 
       # Editable (dev) environment
-      mkUvDevShell = { dir, venvName, workspaceOverrides ? (_final: _prev: { }), overlays ? [], extraPackages ? [], ignoreCollisions ? false }: let
+      mkUvDevShell = { dir, venvName, workspaceOverrides ? (_final: _prev: { }), overlays ? [], extraPackages ? [] }: let
         ws = mkWorkspace { inherit dir; overrides = workspaceOverrides; };
         pythonSet =
           (pkgs.callPackage pyproject-nix.build.packages {
@@ -84,7 +84,7 @@
             editableOverlay
           ]
         );
-        virtualenv = editablePythonSet.mkVirtualEnv venvName (ws.workspace.deps.all // { inherit ignoreCollisions; });
+        virtualenv = editablePythonSet.mkVirtualEnv venvName ws.workspace.deps.all;
       in
         pkgs.mkShell {
           packages = [
