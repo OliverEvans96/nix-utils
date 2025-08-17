@@ -43,18 +43,20 @@
       python = pkgs.python312;
 
       # Non-editable environment
-      mkUvEnv = { dir, venvName, workspaceOverrides ? (_final: _prev: { }) }: let
+      mkUvEnv = { dir, venvName, workspaceOverrides ? (_final: _prev: { }), overlays ? [], extraPackages ? [] }: let
         ws = mkWorkspace { inherit dir; overrides = workspaceOverrides; };
         pythonSet =
           (pkgs.callPackage pyproject-nix.build.packages {
             inherit python;
           }).overrideScope
             (
-              lib.composeManyExtensions [
-                pyproject-build-systems.overlays.default
-                ws.overlay
-                ws.pyprojectOverrides
-              ]
+              lib.composeManyExtensions (
+                [
+                  pyproject-build-systems.overlays.default
+                  ws.overlay
+                  ws.pyprojectOverrides
+                ] ++ overlays
+              )
             );
         virtualenv = pythonSet.mkVirtualEnv venvName ws.workspace.deps.all;
       in
